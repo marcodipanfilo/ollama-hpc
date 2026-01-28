@@ -1,0 +1,71 @@
+# =========================
+# USAGE: add_model.batch
+# =========================
+#
+# How to add a model (recommended):
+#
+#   sbatch --export=MODEL=<model_name> add_model.batch
+#
+# Example:
+#
+#   sbatch --export=MODEL=deepseek-r1:8b add_model.batch
+#   sbatch --export=MODEL=llama3.1:8b add_model.batch
+#
+# Optional default model:
+#   You may uncomment the line below to define a default model
+#   that will be added if MODEL is not provided via sbatch.
+#
+#   # MODEL="deepseek-r1:8b"
+#
+# After pulling the model, the script will:
+#   1) Run a simple test query using `ollama run`
+#   2) List all installed models
+
+#!/bin/bash
+#SBATCH --job-name=ollama-add-model
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=32G
+#SBATCH --time=02:00:00
+#SBATCH --gres=gpu:1
+#SBATCH --constraint=gpu32g
+#SBATCH --account=vkg_mpboot
+#SBATCH --partition=gpu-pre
+#SBATCH --output=logs/%j.out
+#SBATCH --error=logs/%j.err
+
+module load cuda
+export PATH=$HOME/.local/bin:$PATH
+
+# Repo-local node name file (optional, but consistent with your setup)
+hostname > $PWD/nodename.txt
+
+# Ollama settings
+export GIN_MODE=release
+export OLLAMA_HOST=0.0.0.0
+export OLLAMA_MODELS=/data/users/mdipanfilo/ollama
+
+# Optional default model (UNCOMMENT to enable)
+# MODEL="deepseek-r1:8b"
+
+# Choose model via sbatch --export=MODEL=...
+MODEL="${MODEL:-}"
+
+echo "==> Starting Ollama server..."
+ollama serve >/dev/null 2>&1 &
+SERVER_PID=$!
+
+# Give the server time to start
+sleep 5
+
+echo "==> Pulling model: $MODEL"
+ollama pull "$MODEL"
+
+echo "==> Test request (ollama run)..."
+ollama run "$MODEL" "What is the capital of Italy? Answer in one sentence."
+
+echo "==> Listing installed models..."
+ollama list
+
+echo "==> Done."

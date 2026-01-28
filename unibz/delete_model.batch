@@ -1,0 +1,56 @@
+# =========================
+# USAGE: delete_model.batch
+# =========================
+#
+# How to delete a model (recommended):
+#
+#   sbatch --export=MODEL=<model_name> delete_model.batch
+#
+# Example:
+#
+#   sbatch --export=MODEL=qwen2.5:7b delete_model.batch
+#
+# Optional default model:
+#   You may uncomment the line below to define a default model
+#   that will be deleted if MODEL is not provided via sbatch.
+#
+#   ⚠️ Use with care.
+#
+#   # MODEL="deepseek-r1:8b"
+#
+# If MODEL is not provided (and no default is uncommented),
+# the script will NOT delete anything and will only list
+# the remaining installed models.
+
+#!/bin/bash
+#SBATCH --job-name=ollama-del-model
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=2
+#SBATCH --mem=8G
+#SBATCH --time=00:30:00
+#SBATCH --account=vkg_mpboot
+#SBATCH --partition=gpu-pre
+#SBATCH --output=logs/%j.out
+#SBATCH --error=logs/%j.err
+
+export PATH=$HOME/.local/bin:$PATH
+
+# Ollama model store
+export OLLAMA_MODELS=/data/users/mdipanfilo/ollama
+
+# Choose model via sbatch --export=MODEL=...
+MODEL="${MODEL:-}"
+
+if [ -z "$MODEL" ]; then
+  echo "No MODEL provided. Skipping deletion."
+  echo "Usage: sbatch --export=MODEL=<model_name> delete_model.batch"
+else
+  echo "==> Deleting model: $MODEL"
+  ollama rm "$MODEL" || true
+fi
+
+echo "==> Remaining models:"
+ollama list
+
+echo "==> Done."
