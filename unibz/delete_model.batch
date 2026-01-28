@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # =========================
 # USAGE: delete_model.batch
 # =========================
@@ -22,7 +24,6 @@
 # the script will NOT delete anything and will only list
 # the remaining installed models.
 
-#!/bin/bash
 #SBATCH --job-name=ollama-del-model
 #SBATCH --nodes=1
 #SBATCH --ntasks=1

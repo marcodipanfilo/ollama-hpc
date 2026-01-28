@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # =========================
 # USAGE: add_model.batch
 # =========================
@@ -21,7 +23,6 @@
 #   1) Run a simple test query using `ollama run`
 #   2) List all installed models
 
-#!/bin/bash
 #SBATCH --job-name=ollama-add-model
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
