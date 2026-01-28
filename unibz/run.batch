@@ -1,0 +1,28 @@
+#!/bin/bash
+#SBATCH --job-name=ollama-test
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=100G
+#SBATCH --time=02:00:00
+#SBATCH --partition=gpu   # or cpu, depending on what you need
+#SBATCH --gres=gpu:1      # if you want GPU acceleration
+#SBATCH --constraint=gpu32g
+#SBATCH --account=vkg_mpboot
+#SBATCH --partition=gpu-pre
+#SBATCH --output=%j.out # the standard output is written to this file
+#SBATCH --error=%j.err # the standard error is written to this file
+
+#module load ollama   # if you have a module system, otherwise ensure Ollama is installed
+
+module load cuda
+export PATH=$HOME/.local/bin:$PATH
+
+hostname > ~/ollama-hpc/unibz/nodename.txt
+
+# removes debug info
+export GIN_MODE=release
+export OLLAMA_HOST=0.0.0.0
+export OLLAMA_MODELS=/data/users/mdipanfilo/ollama
+# Start the Ollama server in the background
+ollama serve
