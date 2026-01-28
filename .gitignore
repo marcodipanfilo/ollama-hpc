@@ -1,1 +1,7 @@
 .DS_Store
+
+# Slurm outputs
+*.out
+*.err
+*.log
+e

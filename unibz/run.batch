@@ -10,8 +10,8 @@
 #SBATCH --constraint=gpu32g
 #SBATCH --account=vkg_mpboot
 #SBATCH --partition=gpu-pre
-#SBATCH --output=%j.out # the standard output is written to this file
-#SBATCH --error=%j.err # the standard error is written to this file
+#SBATCH --output=logs/%j.out # the standard output is written to this file
+#SBATCH --error=logs/%j.err # the standard error is written to this file
 
 #module load ollama   # if you have a module system, otherwise ensure Ollama is installed
 
