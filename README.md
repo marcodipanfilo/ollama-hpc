@@ -99,23 +99,20 @@ export PATH=$HOME/.local/bin:$PATH
 
 ---
 
-### 2.2 Create directory structure
-
-```bash
-mkdir -p ~/ollama/unibz
-mkdir -p /data/users/mdipanfilo/ollama
-```
-
-- `~/ollama/unibz` → batch scripts + node info  
-- `/data/users/mdipanfilo/ollama` → models (large, not backed up)
-
----
 
 ## 3. SSH Convenience (Recommended)
 
 To avoid typing passwords every time, copy your local public key to the HPC login node.
 
 ### 3.1 On the HPC login node
+
+If the `.ssh` directory does not exist yet, create it first:
+
+```bash
+mkdir -p ~/.ssh
+```
+
+Then proceed with:
 
 ```bash
 cd ~/.ssh
@@ -266,13 +263,13 @@ Once the job is **RUNNING**, Ollama listens on port `11434` on the compute node,
 The batch script writes the node name to:
 
 ```text
-~/ollama/unibz/nodename.txt
+~/ollama-hpc/unibz/nodename.txt
 ```
 
 ### 6.1 Open a new local terminal
 
 ```bash
-ssh -N -L 5000:$(ssh mdipanfilo@login.hpc.scientificnet.org "cat ~/ollama/unibz/nodename.txt"):11434 mdipanfilo@login.hpc.scientificnet.org
+ssh -N -L 5000:$(ssh mdipanfilo@login.hpc.scientificnet.org "cat ~/ollama-hpc/unibz/nodename.txt"):11434 mdipanfilo@login.hpc.scientificnet.org
 ```
 
 This forwards:
@@ -317,12 +314,22 @@ scancel 156895
 
 ## 9. Adding New Models to Ollama
 
-On the HPC login node (or inside a running job):
+As far as setup goes, you cannot run Ollama on the **login node**. To add/download new models, update `run_example.batch` and submit it as a Slurm job.
+
+1) Edit `run_example.batch` and add the models you want to pull (e.g. `ollama pull ...`)
+
+2) Submit the job from the working directory:
 
 ```bash
-ollama pull llama3.1:8b
-ollama pull qwen2.5:7b
-ollama list
+cd ~/ollama-hpc/unibz
+sbatch run_example.batch
+```
+
+3) Check progress in the job output:
+
+```bash
+squeue -u mdipanfilo
+tail -f <JOBID>.out
 ```
 
 Models are stored in:
