@@ -312,27 +312,17 @@ scancel 156895
 
 ---
 
-## 9. Adding New Models to Ollama
+## 9. Adding and Deleting Models in Ollama
 
-As far as setup goes, you cannot run Ollama on the **login node**. To add/download new models, update `run_example.batch` and submit it as a Slurm job.
+On the HPC cluster, **Ollama cannot be run on the login node**.  
+All model management (adding or deleting models) must therefore be done via **Slurm batch jobs**.
 
-1) Edit `run_example.batch` and add the models you want to pull (e.g. `ollama pull ...`)
+The repository provides two dedicated batch scripts:
 
-2) Submit the job from the working directory:
+- `add_model.batch` → download and test a model
+- `delete_model.batch` → delete a model (or list remaining ones)
 
-```bash
-cd ~/ollama-hpc/unibz
-sbatch run_example.batch
-```
-
-3) Check progress in the job output:
-
-```bash
-squeue -u mdipanfilo
-tail -f <JOBID>.out
-```
-
-Models are stored in:
+All models are stored in:
 
 ```text
 /data/users/mdipanfilo/ollama
@@ -340,6 +330,64 @@ Models are stored in:
 
 ---
 
+### 9.1 Adding a Model
+
+To add a new model, submit `add_model.batch` and pass the model name via `sbatch`.
+
+```bash
+cd ~/ollama-hpc/unibz
+mkdir -p logs
+sbatch --export=MODEL=<model_name> add_model.batch
+```
+
+**Examples:**
+
+```bash
+sbatch --export=MODEL=deepseek-r1:8b add_model.batch
+sbatch --export=MODEL=llama3.1:8b add_model.batch
+```
+
+What the script does:
+1. Starts an Ollama server on a GPU node
+2. Pulls the requested model
+3. Runs a simple test query using `ollama run`
+4. Lists all installed models
+
+An optional default model can be defined directly inside `add_model.batch`
+(by uncommenting the corresponding line).
+
+---
+
+### 9.2 Deleting a Model
+
+To delete a model, submit `delete_model.batch` with the model name:
+
+```bash
+cd ~/ollama-hpc/unibz
+sbatch --export=MODEL=<model_name> delete_model.batch
+```
+
+**Example:**
+
+```bash
+sbatch --export=MODEL=qwen2.5:7b delete_model.batch
+```
+
+If `MODEL` is **not** provided, the script will **not delete anything** and will
+only list the remaining installed models.
+
+For safety, no default model is deleted unless explicitly specified.
+
+---
+
+### 9.3 Checking Progress
+
+Monitor the job and logs as usual:
+
+```bash
+squeue -u mdipanfilo
+tail -f logs/<JOBID>.out
+```
 ## 10. Useful Commands Cheat Sheet
 
 ```bash
