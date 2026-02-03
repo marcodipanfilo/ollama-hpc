@@ -99,7 +99,6 @@ export PATH=$HOME/.local/bin:$PATH
 
 ---
 
-
 ## 3. SSH Convenience (Recommended)
 
 To avoid typing passwords every time, copy your local public key to the HPC login node.
@@ -388,7 +387,108 @@ Monitor the job and logs as usual:
 squeue -u mdipanfilo
 tail -f logs/<JOBID>.out
 ```
-## 10. Useful Commands Cheat Sheet
+
+---
+
+## 10. Ollama Speedtest (Local vs Remote vs HPC)
+
+### Overview
+
+This speedtest benchmarks multiple Ollama-compatible endpoints using the **same prompt and model configuration**. It is designed to compare response time and output consistency across different execution environments, including:
+
+- a **local Ollama server**
+- a **remote workstation/server** (e.g. obdalin)
+- an **HPC cluster** accessed via SSH port forwarding
+
+Each endpoint is queried in parallel using `curl`. Execution time and model output are stored separately, making it easy to inspect latency differences and response consistency across environments.
+
+---
+
+### What the Speedtest Measures
+
+For each configured endpoint, the script:
+
+1. Sends the same JSON request to `/api/chat`
+2. Measures wall-clock execution time (`real`, `user`, `sys`)
+3. Stores:
+   - model output in `output_<label>.txt`
+   - timing information in `time_<label>.txt`
+
+This allows straightforward side-by-side comparison of performance across environments.
+
+---
+
+### Configuration
+
+Endpoints are defined in **one single place** inside `speedtest.sh` using a combined `label|URL` format:
+
+```bash
+ENDPOINTS=(
+  "local|http://localhost:11434/api/chat"
+  "obdalin|http://obdalin.inf.unibz.it:11434/api/chat"
+  "hpc-cluster|http://localhost:5000/api/chat"
+)
+```
+
+To add a new endpoint, simply add one new line to this array:
+
+```bash
+"new-env|http://host:port/api/chat"
+```
+
+No other changes are required.
+
+---
+
+### How to Run the Speedtest
+
+1. Make the script executable:
+
+```bash
+chmod +x speedtest.sh
+```
+
+2. Run the script:
+
+```bash
+./speedtest.sh
+```
+
+All configured endpoints are queried in parallel.
+
+---
+
+### Results
+
+All results are written to:
+
+```text
+logs/speedtest/
+```
+
+Generated files:
+
+- `output_<label>.txt` – model responses
+- `time_<label>.txt` – timing information
+
+Example:
+
+```text
+logs/speedtest/output_local.txt
+logs/speedtest/time_hpc-cluster.txt
+```
+
+---
+
+### Notes
+
+- Re-running the script **overwrites existing results**
+- All endpoints must expose an Ollama-compatible `/api/chat` endpoint
+- For HPC usage, ensure SSH port forwarding is active before running the speedtest
+
+---
+
+## 11. Useful Commands Cheat Sheet
 
 ```bash
 # Jobs
@@ -406,7 +506,7 @@ ollama run <model>
 
 ---
 
-## 11. Notes & Warnings
+## 12. Notes & Warnings
 
 - Jobs may be preempted → use checkpointing if needed
 - `/data` is not backed up
