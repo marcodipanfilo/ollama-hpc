@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PROMPT='What are VKG mappings. Respond in maximum 3 sentences.'
+PROMPT='Define ontology-based data access (OBDA) in exactly 5 sentences. Each sentence must contain between 12 and 18 words.'
 
 JSON=$(printf '{"model":"deepseek-r1:8b","stream":false,"messages":[{"role":"user","content":"%s"}]}' "$PROMPT")
 
@@ -11,6 +11,7 @@ ENDPOINTS=(
   "local|http://localhost:11434/api/chat"
   "obdalin|http://obdalin.inf.unibz.it:11434/api/chat"
   "hpc-cluster|http://localhost:5000/api/chat"
+  "ailab-nvidia|http://localhost:5001/api/chat"
 )
 
 LOG_DIR="logs/speedtest"
@@ -30,7 +31,14 @@ for ENTRY in "${ENDPOINTS[@]}"; do
 
   echo "Calling: $LABEL → $URL"
 
-  { time curl -s -H "Content-Type: application/json" -d "$JSON" "$URL" > "$OUT"; } 2> "$TIMEFILE" &
+  (
+    START=$(date +%s)
+    { time curl -s -H "Content-Type: application/json" -d "$JSON" "$URL" > "$OUT"; } 2> "$TIMEFILE"
+    STATUS=$?
+    END=$(date +%s)
+    ELAPSED=$((END-START))
+    echo "[$LABEL] finished (exit=$STATUS, ${ELAPSED}s)"
+  ) &
   PIDS+=("$!")
 done
 

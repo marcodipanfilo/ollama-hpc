@@ -427,6 +427,7 @@ ENDPOINTS=(
   "local|http://localhost:11434/api/chat"
   "obdalin|http://obdalin.inf.unibz.it:11434/api/chat"
   "hpc-cluster|http://localhost:5000/api/chat"
+  "ailab-nvidia|http://localhost:5001/api/chat"
 )
 ```
 
@@ -437,6 +438,32 @@ To add a new endpoint, simply add one new line to this array:
 ```
 
 No other changes are required.
+
+#### Accessing the AILab NVIDIA Server
+
+Similar to the `hp-cluster` the `ailab-nvidia` endpoint assumes that an SSH tunnel is open to the AILab machine.
+
+Open the tunnel from your local machine with:
+
+```bash
+ssh -N -L 5001:127.0.0.1:11434 dlanti@10.12.168.30
+```
+
+This forwards:
+
+```text
+localhost:5001 → AILab server localhost:11434
+```
+
+Requests sent to:
+
+```text
+http://localhost:5001/api/chat
+```
+
+will therefore be executed by the Ollama server running on the AILab NVIDIA machine.
+
+Reminder check SSH password in the macOS Keychain if not remembered.
 
 ---
 
