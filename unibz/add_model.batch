@@ -53,12 +53,20 @@ export OLLAMA_MODELS=/data/users/mdipanfilo/ollama
 # Choose model via sbatch --export=MODEL=...
 MODEL="${MODEL:-}"
 
+if [ -z "$MODEL" ]; then
+    echo "ERROR: MODEL is not set."
+    echo "Usage: sbatch --export=ALL,MODEL=deepseek-r1:8b add_model.batch"
+    exit 1
+fi
+
 echo "==> Starting Ollama server..."
 ollama serve >/dev/null 2>&1 &
 SERVER_PID=$!
 
-# Give the server time to start
-sleep 5
+until ollama list >/dev/null 2>&1; do
+    echo "Waiting for Ollama server..."
+    sleep 2
+done
 
 echo "==> Pulling model: $MODEL"
 ollama pull "$MODEL"

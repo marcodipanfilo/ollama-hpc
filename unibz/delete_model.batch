@@ -1,29 +1,5 @@
 #!/bin/bash
 
-# =========================
-# USAGE: delete_model.batch
-# =========================
-#
-# How to delete a model (recommended):
-#
-#   sbatch --export=MODEL=<model_name> delete_model.batch
-#
-# Example:
-#
-#   sbatch --export=MODEL=qwen2.5:7b delete_model.batch
-#
-# Optional default model:
-#   You may uncomment the line below to define a default model
-#   that will be deleted if MODEL is not provided via sbatch.
-#
-#   ⚠️ Use with care.
-#
-#   # MODEL="deepseek-r1:8b"
-#
-# If MODEL is not provided (and no default is uncommented),
-# the script will NOT delete anything and will only list
-# the remaining installed models.
-
 #SBATCH --job-name=ollama-del-model
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -37,21 +13,37 @@
 
 export PATH=$HOME/.local/bin:$PATH
 
-# Ollama model store
+export GIN_MODE=release
+export OLLAMA_HOST=0.0.0.0
 export OLLAMA_MODELS=/data/users/mdipanfilo/ollama
 
-# Choose model via sbatch --export=MODEL=...
 MODEL="${MODEL:-}"
 
 if [ -z "$MODEL" ]; then
-  echo "No MODEL provided. Skipping deletion."
-  echo "Usage: sbatch --export=MODEL=<model_name> delete_model.batch"
-else
-  echo "==> Deleting model: $MODEL"
-  ollama rm "$MODEL" || true
+    echo "ERROR: MODEL is not set."
+    echo "Usage: sbatch --export=ALL,MODEL=qwen2.5:7b delete_model.batch"
+    exit 1
 fi
+
+echo "==> Starting Ollama server..."
+ollama serve >/dev/null 2>&1 &
+SERVER_PID=$!
+
+until ollama list >/dev/null 2>&1; do
+    echo "Waiting for Ollama server..."
+    sleep 2
+done
+
+echo "==> Installed models before deletion:"
+ollama list
+
+echo "==> Deleting model: $MODEL"
+ollama rm "$MODEL"
 
 echo "==> Remaining models:"
 ollama list
+
+echo "==> Stopping Ollama server..."
+kill "$SERVER_PID"
 
 echo "==> Done."
