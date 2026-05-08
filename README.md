@@ -97,6 +97,55 @@ Make sure the path is available:
 export PATH=$HOME/.local/bin:$PATH
 ```
 
+### 2.2 Update a user-local Ollama install without sudo
+
+On the cluster, the official installer may fail if it tries to write to `/usr/local`. If your active binary is already under `~/.local/bin/ollama`, update it manually in your home directory instead.
+
+Check the current install:
+
+```bash
+which ollama
+ls -l ~/.local/bin/ollama
+readlink -f ~/.local/bin/ollama
+ollama --version
+```
+
+Create a temporary local install directory and download the latest Linux release. Example for `x86_64`:
+
+```bash
+mkdir -p "$HOME/opt/ollama"
+cd "$HOME/opt/ollama"
+uname -m
+curl -L https://github.com/ollama/ollama/releases/download/v0.21.0/ollama-linux-amd64.tar.zst -o ollama-linux-amd64.tar.zst
+ls -lh ollama-linux-amd64.tar.zst
+tar --use-compress-program=unzstd -xf ollama-linux-amd64.tar.zst
+find ~/opt/ollama -name ollama -type f
+```
+
+Back up the current binary, replace it with the new one, and verify:
+
+```bash
+cp ~/.local/bin/ollama ~/.local/bin/ollama.backup
+cp ~/opt/ollama/bin/ollama ~/.local/bin/ollama
+chmod +x ~/.local/bin/ollama
+which ollama
+readlink -f ~/.local/bin/ollama
+ollama --version
+```
+
+After the update, you can pull a model with your Slurm helper:
+
+```bash
+cd ~/ollama-hpc/unibz
+sbatch --export=MODEL=qwen3.5:9b add_model.batch
+```
+
+Keep `~/.local/bin/ollama.backup` until the new version starts correctly and the model pull succeeds. Remove it only after verification:
+
+```bash
+rm ~/.local/bin/ollama.backup
+```
+
 ---
 
 ## 3. SSH Convenience (Recommended)
